@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 import os
 import pprint
 
+
 class PathFinder:
     @staticmethod
     def get_filenames(directory):
@@ -35,33 +36,67 @@ class InformationExtractor(HTMLReader):
         return artist_names
 
     def artist_dict_builder(self, directory):
-
         artist_names = self.get_artist_names(directory=directory)
         artists_works_list = []
 
         for artist in artist_names:
+
+            total_sales = self.calculate_total_sales(
+                self.get_works_of_an_artist(
+                    artist=artist,
+                    directory=directory
+                )
+            )
             artists_dict = {
                 'artist': artist,
+                'totalValue': 'USD ' + str(total_sales),
                 'works': self.get_works_of_an_artist(artist=artist, directory=directory)
             }
             artists_works_list.append(artists_dict)
 
-        print(artists_works_list)
-
-
-
+        return artists_works_list
 
     @staticmethod
-    def get_artist_name(file):
-        return file.h2.text
+    def calculate_total_sales(works):
+        total_sale = 0
+        for work in works:
+            if work['currency'] == 'USD':
+                total_sale += int(work['amount'].replace(',', ''))
+            else:
+                total_sale += int(work['amount'].replace(',', '')) * 1.35
+
+        return total_sale
+
+
+
+
+    def get_artist_name(self, file):
+        if self.is_fine_new_type(file):
+            return file.h3.text
+        else:
+            return file.h3.text
 
     @staticmethod
     def get_work_name(file):
         return file.h3.text
 
+    def get_work_sale(self, file):
+        if self.is_fine_new_type(file):
+            return self.get_currency_span(file)[0].text + ' ' + self.get_currency_span(file)[1].text
+        else:
+            return file.findAll('div')[1].text
+            file.find(id="currency")
+
     @staticmethod
-    def get_work_sale(file):
-        return file.findAll('div')[1].text
+    def get_currency_span(file):
+        return file.findAll('div')[1].findAll('span')
+
+    @staticmethod
+    def is_fine_new_type(file):
+        if file.h3.text.find("class"):
+            return True
+        else:
+            return False
 
     @staticmethod
     def split_price_and_currency(sale_string):
@@ -69,7 +104,7 @@ class InformationExtractor(HTMLReader):
 
     def get_works_of_an_artist(self, artist, directory):
         files = self.get_files(directory)
-        work_names = []
+        works = []
         for file in files:
             if artist == self.get_artist_name(file):
                 work_dict = {
@@ -77,15 +112,13 @@ class InformationExtractor(HTMLReader):
                     'currency': self.split_price_and_currency(self.get_work_sale(file))[0],
                     'amount': self.split_price_and_currency(self.get_work_sale(file))[1]
                 }
-                work_names.append(work_dict)
+                works.append(work_dict)
 
-        return work_names
+        return works
 
 
 if __name__ == '__main__':
     parser_class = InformationExtractor()
 
-    path = 'data/2015-03-18/'
-    #print(parser_class.get_works_of_an_artist('Rembrandt Harmensz. van Rijn', path))
-
+    path = 'data/2017-12-20/'
     pprint.pprint(parser_class.artist_dict_builder(path))
