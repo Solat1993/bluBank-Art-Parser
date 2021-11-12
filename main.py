@@ -40,9 +40,10 @@ class InformationExtractor(HTMLReader):
         artists_works_list = []
 
         for artist in artist_names:
-            artists_dict = {}
-            artists_dict['artist'] = artist
-            artists_dict['works'] = self.get_works_of_an_artist(artist=artist, directory=directory)
+            artists_dict = {
+                'artist': artist,
+                'works': self.get_works_of_an_artist(artist=artist, directory=directory)
+            }
             artists_works_list.append(artists_dict)
 
         print(artists_works_list)
@@ -71,7 +72,11 @@ class InformationExtractor(HTMLReader):
         work_names = []
         for file in files:
             if artist == self.get_artist_name(file):
-                work_names.append(self.get_work_name(file))
+                work_dict = {
+                    'title': self.get_work_name(file),
+                    'price': self.get_work_sale(file)
+                }
+                work_names.append(work_dict)
 
         return work_names
 
