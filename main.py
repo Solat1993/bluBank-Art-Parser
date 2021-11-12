@@ -1,16 +1,44 @@
-# This is a sample Python script.
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+from bs4 import BeautifulSoup
+import os
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+class PathFinder:
+    @staticmethod
+    def get_filenames(directory):
+        return next(os.walk(directory), (None, None, []))[2]
 
 
-# Press the green button in the gutter to run the script.
+class HTMLReader(PathFinder):
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def open_file(path):
+        with open(path, 'r') as file:
+            contents = file.read()
+
+            return BeautifulSoup(contents, features="html.parser")
+
+    def get_files(self, directory):
+        file_names = self.get_filenames(directory)
+        files = []
+        for file_name in file_names:
+            files.append(self.open_file(directory + file_name))
+
+        return files
+
+
+class InformationGetter(HTMLReader):
+    def get_artist_name(self, directory):
+        files = self.get_files(directory)
+        artist_names = []
+        for file in files:
+            artist_names.append(file.h2.text)
+        return artist_names
+
+
 if __name__ == '__main__':
-    print_hi('PyCharm')
+    parser_class = InformationGetter()
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    path = 'data/2015-03-18/'
+    print(parser_class.get_artist_name(path))
