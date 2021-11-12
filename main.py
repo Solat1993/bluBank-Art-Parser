@@ -74,7 +74,8 @@ class InformationExtractor(HTMLReader):
             if artist == self.get_artist_name(file):
                 work_dict = {
                     'title': self.get_work_name(file),
-                    'price': self.get_work_sale(file)
+                    'currency': self.split_price_and_currency(self.get_work_sale(file))[0],
+                    'amount': self.split_price_and_currency(self.get_work_sale(file))[1]
                 }
                 work_names.append(work_dict)
 
